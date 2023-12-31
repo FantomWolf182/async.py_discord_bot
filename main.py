@@ -40,13 +40,20 @@ def create_embed(content, color):
   embed = discord.Embed(description=content, color=color)
   return embed
 
-async def send_embed(channel, content, color, embeduserid):
+async def send_embed(channel, content, color, embeduserid=None):
   embed = create_embed(content, color)
-  await channel.send(f"<@{embeduserid}>", embed=embed)
+  if embeduserid is not None:
+      await channel.send(f"<@{embeduserid}>", embed=embed)
+  else:
+      await channel.send(embed=embed)
+
 
 
 @bot.event
 async def on_message(message):
+  with open('username_and_userid.json', 'r') as file:
+    userids = json.load(file)
+  
     # Ignore messages from the bot itself to prevent potential loops
     if message.author == bot.user:
         return
@@ -120,7 +127,7 @@ async def on_message(message):
                 await timer(message, 600, "report")
             else:
                 response = 'Invalid format'
-                await message.channel.send(response)
+                #await message.channel.send(response)
         else:
             # If the user doesn't have the role "Naruto Botto"
             response = 'not_naruto_botto_role'
@@ -136,6 +143,8 @@ async def on_message(message):
     await bot.process_commands(message)
 
 async def timer(message, time, type):
+  with open('username_and_userid.json', 'r') as file:
+    userids = json.load(file)
   username = message.embeds[0].title.split("'s")[0]
 
   # Get the user ID from the JSON data
@@ -179,6 +188,12 @@ async def notification_setup(interaction: discord.Interaction):
 
     response = f"Notification setup complete!"
     await send_embed(interaction.channel, response, discord.Color.green(), user_id)
+
+@bot.tree.command(name="about", description="Information surrounding the bot")
+async def about(interaction: discord.Interaction):
+  response = str("# About **Async.py:** \n \n ## **Made by:** \n Quanfy, who is a really cool guy <:goodjob:1191142838684102777> \n \n Different Embed Color Meanings: \n \n **Green** - The answer is correct and the bot functioned correctly \n \n **Orange** - The answer is correct but the bot could not correctly extract the right answer number, \n \n **Red** - The answer is incorrect or the bot could not find the answer. \n \n **If you are not getting notifcations, make sure that you have setup notifications (using /notifications_setup)** \n \n ## **Have Fun!**")
+  await send_embed(interaction.channel, response, discord.Color.og_blurple())
+
 
 
 
