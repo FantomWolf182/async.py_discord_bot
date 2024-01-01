@@ -22,6 +22,9 @@ with open('ans.json', 'r') as file:
 with open('username_and_userid.json', 'r') as file:
   userids = json.load(file)
 
+with open('missions_leaderboard.json', 'r') as file:
+  missions = json.load(file)
+
 
 # Create an instance of the bot with the specified intents
 bot = commands.Bot(command_prefix='/', intents=intents)
@@ -193,6 +196,48 @@ async def notification_setup(interaction: discord.Interaction):
 async def about(interaction: discord.Interaction):
   response = str("# About **Async.py:** \n \n ## **Made by:** \n Quanfy, who is a really cool guy <:goodjob:1191142838684102777> \n \n Different Embed Color Meanings: \n \n **Green** - The answer is correct and the bot functioned correctly \n \n **Orange** - The answer is correct but the bot could not correctly extract the right answer number, \n \n **Red** - The answer is incorrect or the bot could not find the answer. \n \n **If you are not getting notifcations, make sure that you have setup notifications (using /notifications_setup)** \n \n ## **Have Fun!**")
   await send_embed(interaction.channel, response, discord.Color.og_blurple())
+
+
+@bot.event
+async def on_message_edit(before, after):
+    # Check if the edited message has an embed
+    if after.embeds and after.embeds[0]:
+        # Check if the user has the role "Naruto Botto"
+        naruto_botto_role = discord.utils.get(after.guild.roles, name="Naruto Botto")
+        if naruto_botto_role and naruto_botto_role in after.author.roles:
+            
+          username = after.embeds[0].title.split("'s")[0] if after.embeds else None
+
+          footer = after.embeds[0].footer.text.split("C")[1]
+          
+          if footer == "orrect answer! ✅":
+
+            mission_number = missions.get(username, 0)
+            
+            # Create or load the JSON file
+            try:
+                with open('missions_leaderboard.json', 'r') as file:
+                    data = json.load(file)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = {}
+              
+            data[username] = mission_number + 1
+
+            # Save the updated JSON file
+            with open('missions_leaderboard.json', 'w') as file:
+                json.dump(data, file)
+
+@bot.tree.command(name="missions_leaderboard", description="display the missions leaderboard")
+async def missions_leaderboard(interaction: discord.Interaction):
+  with open('missions_leaderboard.json', 'r') as file:
+    data = json.load(file)
+
+  # Sort the dictionary by values in descending order
+  sorted_data = dict(sorted(data.items(), key=lambda item: item[1], reverse=True))
+
+  # Write the sorted dictionary back to the JSON file
+  with open('missions_leaderboard.json', 'w') as file:
+    json.dump(sorted_data, file, indent=2)
 
 
 
